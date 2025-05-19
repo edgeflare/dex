@@ -1,3 +1,4 @@
+//nolint:gochecknoinits // Intentional init function to load claims from environment
 package server
 
 import (
