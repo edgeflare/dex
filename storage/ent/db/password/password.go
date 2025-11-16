@@ -19,6 +19,8 @@ const (
 	FieldUsername = "username"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
+	// FieldGroups holds the string denoting the groups field in the database.
+	FieldGroups = "groups"
 	// Table holds the table name of the password in the database.
 	Table = "passwords"
 )
@@ -30,6 +32,7 @@ var Columns = []string{
 	FieldHash,
 	FieldUsername,
 	FieldUserID,
+	FieldGroups,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -49,6 +52,8 @@ var (
 	UsernameValidator func(string) error
 	// UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	UserIDValidator func(string) error
+	// DefaultGroups holds the default value on creation for the "groups" field.
+	DefaultGroups []string
 )
 
 // OrderOption defines the ordering options for the Password queries.

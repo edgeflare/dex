@@ -15,6 +15,7 @@ func (d *Database) CreatePassword(ctx context.Context, password storage.Password
 		SetHash(password.Hash).
 		SetUsername(password.Username).
 		SetUserID(password.UserID).
+		SetGroups(password.Groups).
 		Save(ctx)
 	if err != nil {
 		return convertDBError("create password: %w", err)
@@ -87,6 +88,7 @@ func (d *Database) UpdatePassword(ctx context.Context, email string, updater fun
 		SetHash(newPassword.Hash).
 		SetUsername(newPassword.Username).
 		SetUserID(newPassword.UserID).
+		SetGroups(newPassword.Groups).
 		Save(ctx)
 	if err != nil {
 		return rollback(tx, "update password uploading: %w", err)

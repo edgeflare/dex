@@ -3,6 +3,7 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -23,7 +24,9 @@ type Password struct {
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// UserID holds the value of the "user_id" field.
-	UserID       string `json:"user_id,omitempty"`
+	UserID string `json:"user_id,omitempty"`
+	// Groups holds the value of the "groups" field.
+	Groups       []string `json:"groups,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -32,7 +35,7 @@ func (*Password) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case password.FieldHash:
+		case password.FieldHash, password.FieldGroups:
 			values[i] = new([]byte)
 		case password.FieldID:
 			values[i] = new(sql.NullInt64)
@@ -83,6 +86,14 @@ func (_m *Password) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UserID = value.String
 			}
+		case password.FieldGroups:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field groups", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Groups); err != nil {
+					return fmt.Errorf("unmarshal field groups: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -130,6 +141,9 @@ func (_m *Password) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(_m.UserID)
+	builder.WriteString(", ")
+	builder.WriteString("groups=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Groups))
 	builder.WriteByte(')')
 	return builder.String()
 }

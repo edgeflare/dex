@@ -35,6 +35,9 @@ func (Password) Fields() []ent.Field {
 		field.Text("user_id").
 			SchemaType(textSchema).
 			NotEmpty(),
+		field.JSON("groups", []string{}).
+			Optional().
+			Default([]string{}),
 	}
 }
 

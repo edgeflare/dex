@@ -307,6 +307,16 @@ func UserIDContainsFold(v string) predicate.Password {
 	return predicate.Password(sql.FieldContainsFold(FieldUserID, v))
 }
 
+// GroupsIsNil applies the IsNil predicate on the "groups" field.
+func GroupsIsNil() predicate.Password {
+	return predicate.Password(sql.FieldIsNull(FieldGroups))
+}
+
+// GroupsNotNil applies the NotNil predicate on the "groups" field.
+func GroupsNotNil() predicate.Password {
+	return predicate.Password(sql.FieldNotNull(FieldGroups))
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Password) predicate.Password {
 	return predicate.Password(sql.AndPredicates(predicates...))

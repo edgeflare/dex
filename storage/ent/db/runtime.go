@@ -216,6 +216,10 @@ func init() {
 	passwordDescUserID := passwordFields[3].Descriptor()
 	// password.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	password.UserIDValidator = passwordDescUserID.Validators[0].(func(string) error)
+	// passwordDescGroups is the schema descriptor for groups field.
+	passwordDescGroups := passwordFields[4].Descriptor()
+	// password.DefaultGroups holds the default value on creation for the groups field.
+	password.DefaultGroups = passwordDescGroups.Default.([]string)
 	refreshtokenFields := schema.RefreshToken{}.Fields()
 	_ = refreshtokenFields
 	// refreshtokenDescClientID is the schema descriptor for client_id field.

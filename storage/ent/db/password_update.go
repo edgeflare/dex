@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/dexidp/dex/storage/ent/db/password"
 	"github.com/dexidp/dex/storage/ent/db/predicate"
@@ -72,6 +73,24 @@ func (_u *PasswordUpdate) SetNillableUserID(v *string) *PasswordUpdate {
 	if v != nil {
 		_u.SetUserID(*v)
 	}
+	return _u
+}
+
+// SetGroups sets the "groups" field.
+func (_u *PasswordUpdate) SetGroups(v []string) *PasswordUpdate {
+	_u.mutation.SetGroups(v)
+	return _u
+}
+
+// AppendGroups appends value to the "groups" field.
+func (_u *PasswordUpdate) AppendGroups(v []string) *PasswordUpdate {
+	_u.mutation.AppendGroups(v)
+	return _u
+}
+
+// ClearGroups clears the value of the "groups" field.
+func (_u *PasswordUpdate) ClearGroups() *PasswordUpdate {
+	_u.mutation.ClearGroups()
 	return _u
 }
 
@@ -151,6 +170,17 @@ func (_u *PasswordUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(password.FieldUserID, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Groups(); ok {
+		_spec.SetField(password.FieldGroups, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedGroups(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, password.FieldGroups, value)
+		})
+	}
+	if _u.mutation.GroupsCleared() {
+		_spec.ClearField(password.FieldGroups, field.TypeJSON)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{password.Label}
@@ -216,6 +246,24 @@ func (_u *PasswordUpdateOne) SetNillableUserID(v *string) *PasswordUpdateOne {
 	if v != nil {
 		_u.SetUserID(*v)
 	}
+	return _u
+}
+
+// SetGroups sets the "groups" field.
+func (_u *PasswordUpdateOne) SetGroups(v []string) *PasswordUpdateOne {
+	_u.mutation.SetGroups(v)
+	return _u
+}
+
+// AppendGroups appends value to the "groups" field.
+func (_u *PasswordUpdateOne) AppendGroups(v []string) *PasswordUpdateOne {
+	_u.mutation.AppendGroups(v)
+	return _u
+}
+
+// ClearGroups clears the value of the "groups" field.
+func (_u *PasswordUpdateOne) ClearGroups() *PasswordUpdateOne {
+	_u.mutation.ClearGroups()
 	return _u
 }
 
@@ -324,6 +372,17 @@ func (_u *PasswordUpdateOne) sqlSave(ctx context.Context) (_node *Password, err 
 	}
 	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(password.FieldUserID, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Groups(); ok {
+		_spec.SetField(password.FieldGroups, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedGroups(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, password.FieldGroups, value)
+		})
+	}
+	if _u.mutation.GroupsCleared() {
+		_spec.ClearField(password.FieldGroups, field.TypeJSON)
 	}
 	_node = &Password{config: _u.config}
 	_spec.Assign = _node.assignValues

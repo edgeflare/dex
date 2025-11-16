@@ -43,6 +43,12 @@ func (_c *PasswordCreate) SetUserID(v string) *PasswordCreate {
 	return _c
 }
 
+// SetGroups sets the "groups" field.
+func (_c *PasswordCreate) SetGroups(v []string) *PasswordCreate {
+	_c.mutation.SetGroups(v)
+	return _c
+}
+
 // Mutation returns the PasswordMutation object of the builder.
 func (_c *PasswordCreate) Mutation() *PasswordMutation {
 	return _c.mutation
@@ -50,6 +56,7 @@ func (_c *PasswordCreate) Mutation() *PasswordMutation {
 
 // Save creates the Password in the database.
 func (_c *PasswordCreate) Save(ctx context.Context) (*Password, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -72,6 +79,14 @@ func (_c *PasswordCreate) Exec(ctx context.Context) error {
 func (_c *PasswordCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_c *PasswordCreate) defaults() {
+	if _, ok := _c.mutation.Groups(); !ok {
+		v := password.DefaultGroups
+		_c.mutation.SetGroups(v)
 	}
 }
 
@@ -146,6 +161,10 @@ func (_c *PasswordCreate) createSpec() (*Password, *sqlgraph.CreateSpec) {
 		_spec.SetField(password.FieldUserID, field.TypeString, value)
 		_node.UserID = value
 	}
+	if value, ok := _c.mutation.Groups(); ok {
+		_spec.SetField(password.FieldGroups, field.TypeJSON, value)
+		_node.Groups = value
+	}
 	return _node, _spec
 }
 
@@ -167,6 +186,7 @@ func (_c *PasswordCreateBulk) Save(ctx context.Context) ([]*Password, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PasswordMutation)
 				if !ok {

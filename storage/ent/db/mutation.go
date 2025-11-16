@@ -6321,6 +6321,8 @@ type PasswordMutation struct {
 	hash          *[]byte
 	username      *string
 	user_id       *string
+	groups        *[]string
+	appendgroups  []string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Password, error)
@@ -6569,6 +6571,71 @@ func (m *PasswordMutation) ResetUserID() {
 	m.user_id = nil
 }
 
+// SetGroups sets the "groups" field.
+func (m *PasswordMutation) SetGroups(s []string) {
+	m.groups = &s
+	m.appendgroups = nil
+}
+
+// Groups returns the value of the "groups" field in the mutation.
+func (m *PasswordMutation) Groups() (r []string, exists bool) {
+	v := m.groups
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroups returns the old "groups" field's value of the Password entity.
+// If the Password object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PasswordMutation) OldGroups(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroups is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroups requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroups: %w", err)
+	}
+	return oldValue.Groups, nil
+}
+
+// AppendGroups adds s to the "groups" field.
+func (m *PasswordMutation) AppendGroups(s []string) {
+	m.appendgroups = append(m.appendgroups, s...)
+}
+
+// AppendedGroups returns the list of values that were appended to the "groups" field in this mutation.
+func (m *PasswordMutation) AppendedGroups() ([]string, bool) {
+	if len(m.appendgroups) == 0 {
+		return nil, false
+	}
+	return m.appendgroups, true
+}
+
+// ClearGroups clears the value of the "groups" field.
+func (m *PasswordMutation) ClearGroups() {
+	m.groups = nil
+	m.appendgroups = nil
+	m.clearedFields[password.FieldGroups] = struct{}{}
+}
+
+// GroupsCleared returns if the "groups" field was cleared in this mutation.
+func (m *PasswordMutation) GroupsCleared() bool {
+	_, ok := m.clearedFields[password.FieldGroups]
+	return ok
+}
+
+// ResetGroups resets all changes to the "groups" field.
+func (m *PasswordMutation) ResetGroups() {
+	m.groups = nil
+	m.appendgroups = nil
+	delete(m.clearedFields, password.FieldGroups)
+}
+
 // Where appends a list predicates to the PasswordMutation builder.
 func (m *PasswordMutation) Where(ps ...predicate.Password) {
 	m.predicates = append(m.predicates, ps...)
@@ -6603,7 +6670,7 @@ func (m *PasswordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PasswordMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.email != nil {
 		fields = append(fields, password.FieldEmail)
 	}
@@ -6615,6 +6682,9 @@ func (m *PasswordMutation) Fields() []string {
 	}
 	if m.user_id != nil {
 		fields = append(fields, password.FieldUserID)
+	}
+	if m.groups != nil {
+		fields = append(fields, password.FieldGroups)
 	}
 	return fields
 }
@@ -6632,6 +6702,8 @@ func (m *PasswordMutation) Field(name string) (ent.Value, bool) {
 		return m.Username()
 	case password.FieldUserID:
 		return m.UserID()
+	case password.FieldGroups:
+		return m.Groups()
 	}
 	return nil, false
 }
@@ -6649,6 +6721,8 @@ func (m *PasswordMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldUsername(ctx)
 	case password.FieldUserID:
 		return m.OldUserID(ctx)
+	case password.FieldGroups:
+		return m.OldGroups(ctx)
 	}
 	return nil, fmt.Errorf("unknown Password field %s", name)
 }
@@ -6686,6 +6760,13 @@ func (m *PasswordMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUserID(v)
 		return nil
+	case password.FieldGroups:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroups(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Password field %s", name)
 }
@@ -6715,7 +6796,11 @@ func (m *PasswordMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *PasswordMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(password.FieldGroups) {
+		fields = append(fields, password.FieldGroups)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -6728,6 +6813,11 @@ func (m *PasswordMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *PasswordMutation) ClearField(name string) error {
+	switch name {
+	case password.FieldGroups:
+		m.ClearGroups()
+		return nil
+	}
 	return fmt.Errorf("unknown Password nullable field %s", name)
 }
 
@@ -6746,6 +6836,9 @@ func (m *PasswordMutation) ResetField(name string) error {
 		return nil
 	case password.FieldUserID:
 		m.ResetUserID()
+		return nil
+	case password.FieldGroups:
+		m.ResetGroups()
 		return nil
 	}
 	return fmt.Errorf("unknown Password field %s", name)

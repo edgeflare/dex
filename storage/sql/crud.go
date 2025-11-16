@@ -648,7 +648,7 @@ func (c *conn) GetPassword(ctx context.Context, email string) (storage.Password,
 func getPassword(ctx context.Context, q querier, email string) (p storage.Password, err error) {
 	return scanPassword(q.QueryRow(`
 		select
-			email, hash, username, user_id
+			email, hash, username, user_id, groups
 		from password where email = $1;
 	`, strings.ToLower(email)))
 }
@@ -656,7 +656,7 @@ func getPassword(ctx context.Context, q querier, email string) (p storage.Passwo
 func (c *conn) ListPasswords(ctx context.Context) ([]storage.Password, error) {
 	rows, err := c.Query(`
 		select
-			email, hash, username, user_id
+			email, hash, username, user_id, groups
 		from password;
 	`)
 	if err != nil {
@@ -680,7 +680,7 @@ func (c *conn) ListPasswords(ctx context.Context) ([]storage.Password, error) {
 
 func scanPassword(s scanner) (p storage.Password, err error) {
 	err = s.Scan(
-		&p.Email, &p.Hash, &p.Username, &p.UserID,
+		&p.Email, &p.Hash, &p.Username, &p.UserID, decoder(&p.Groups),
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
