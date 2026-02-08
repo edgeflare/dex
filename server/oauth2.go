@@ -287,6 +287,8 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
+
+	CustomClaims map[string]any `json:"-"`
 }
 
 type federatedIDClaims struct {
@@ -352,11 +354,12 @@ func (s *Server) newIDToken(ctx context.Context, clientID string, claims storage
 	}
 
 	tok := idTokenClaims{
-		Issuer:   s.issuerURL.String(),
-		Subject:  subjectString,
-		Nonce:    nonce,
-		Expiry:   expiry.Unix(),
-		IssuedAt: issuedAt.Unix(),
+		Issuer:       s.issuerURL.String(),
+		Subject:      subjectString,
+		Nonce:        nonce,
+		Expiry:       expiry.Unix(),
+		IssuedAt:     issuedAt.Unix(),
+		CustomClaims: customClaims,
 	}
 
 	// Include auth_time when sessions are enabled and the value is available.
