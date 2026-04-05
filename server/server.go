@@ -253,6 +253,8 @@ type Server struct {
 
 	mfaProviders    map[string]MFAProvider
 	defaultMFAChain []string
+
+	claimsEnricher ClaimsEnricher
 }
 
 // NewServer constructs a server from the provided config.
@@ -380,6 +382,12 @@ func newServer(ctx context.Context, c Config) (*Server, error) {
 		mfaProviders:           c.MFAProviders,
 		defaultMFAChain:        c.DefaultMFAChain,
 	}
+
+	claimsEnricher, err := NewClaimsEnricherFromEnv(ctx, s.logger)
+	if err != nil {
+		return nil, fmt.Errorf("claims enricher: %w", err)
+	}
+	s.claimsEnricher = claimsEnricher
 
 	// Retrieves connector objects in backend storage. This list includes the static connectors
 	// defined in the ConfigMap and dynamic connectors retrieved from the storage.

@@ -289,6 +289,8 @@ type idTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *federatedIDClaims `json:"federated_claims,omitempty"`
+
+	CustomClaims map[string]any `json:"-"`
 }
 
 type federatedIDClaims struct {
@@ -353,13 +355,20 @@ func (s *Server) newIDToken(ctx context.Context, clientID string, claims storage
 		return "", expiry, fmt.Errorf("failed to marshal offline session ID: %v", err)
 	}
 
+	if s.claimsEnricher != nil {
+		if err := s.claimsEnricher.Enrich(ctx, &claims); err != nil {
+			return "", expiry, fmt.Errorf("enriching claims: %w", err)
+		}
+	}
+
 	tok := idTokenClaims{
-		Issuer:   s.issuerURL.String(),
-		Subject:  subjectString,
-		Nonce:    nonce,
-		Expiry:   expiry.Unix(),
-		IssuedAt: issuedAt.Unix(),
-		JWTID:    uuid.New().String(),
+		Issuer:       s.issuerURL.String(),
+		Subject:      subjectString,
+		Nonce:        nonce,
+		Expiry:       expiry.Unix(),
+		IssuedAt:     issuedAt.Unix(),
+		JWTID:        uuid.New().String(),
+		CustomClaims: claims.CustomClaims,
 	}
 
 	// Include auth_time when sessions are enabled and the value is available.
