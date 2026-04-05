@@ -27,6 +27,15 @@ type Issuer struct {
 
 	// Refresh persists and rotates refresh tokens.
 	Refresh *RefreshStore
+
+	// ClaimsEnricher, when set, adds custom claims to every token SignIDToken mints.
+	ClaimsEnricher ClaimsEnricher
+}
+
+// ClaimsEnricher adds custom claims to an ID token by writing them into
+// claims.CustomClaims. It is called once per token issuance.
+type ClaimsEnricher interface {
+	Enrich(ctx context.Context, claims *storage.Claims) error
 }
 
 // NewIssuer wires an issuer from the shared dependencies.
@@ -101,13 +110,21 @@ func (i *Issuer) SignIDToken(ctx context.Context, auth Authorization, accessToke
 		return "", expiry, fmt.Errorf("failed to marshal offline session ID: %v", err)
 	}
 
+	// auth is a copy, so enriching auth.Claims does not leak into the caller.
+	if i.ClaimsEnricher != nil {
+		if err := i.ClaimsEnricher.Enrich(ctx, &auth.Claims); err != nil {
+			return "", expiry, fmt.Errorf("enriching claims: %w", err)
+		}
+	}
+
 	tok := IDTokenClaims{
-		Issuer:   i.issuerURL.String(),
-		Subject:  subjectString,
-		Nonce:    auth.Nonce,
-		Expiry:   expiry.Unix(),
-		IssuedAt: issuedAt.Unix(),
-		JWTID:    uuid.New().String(),
+		Issuer:       i.issuerURL.String(),
+		Subject:      subjectString,
+		Nonce:        auth.Nonce,
+		Expiry:       expiry.Unix(),
+		IssuedAt:     issuedAt.Unix(),
+		JWTID:        uuid.New().String(),
+		CustomClaims: auth.Claims.CustomClaims,
 	}
 
 	if !auth.AuthTime.IsZero() {

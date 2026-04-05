@@ -88,6 +88,10 @@ type IDTokenClaims struct {
 	PreferredUsername string `json:"preferred_username,omitempty"`
 
 	FederatedIDClaims *FederatedIDClaims `json:"federated_claims,omitempty"`
+
+	// CustomClaims are extra claims added by a ClaimsEnricher. They are merged
+	// into the payload by MarshalJSON.
+	CustomClaims map[string]any `json:"-"`
 }
 
 // FederatedIDClaims carries the upstream connector's identity for the

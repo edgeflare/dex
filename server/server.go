@@ -125,6 +125,12 @@ func newServer(ctx context.Context, c Config) (*Server, error) {
 		SessionsEnabled: c.SessionConfig != nil,
 	}
 
+	claimsEnricher, err := NewClaimsEnricherFromEnv(ctx, s.logger)
+	if err != nil {
+		return nil, fmt.Errorf("claims enricher: %w", err)
+	}
+	s.issuer.ClaimsEnricher = claimsEnricher
+
 	if err := s.openConnectors(ctx, c); err != nil {
 		return nil, err
 	}
